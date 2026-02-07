@@ -1,63 +1,11 @@
-from collections import defaultdict
 from pandas import DataFrame
-from pathlib import Path
-from rich import print as pprint
-from rich import box
-from rich.table import Table
 from rich.console import Console, Group
-from rich.rule import Rule
 from rich.panel import Panel
-import typer
-from typing import List
-
+from rich.rule import Rule
+from rich.table import Table
+from rich import box
 
 console = Console()
-
-
-app = typer.Typer(
-    help="Handy tool for quickly spotting missing keys and differing values in .env files",
-    add_completion=False,
-)
-
-
-@app.callback(invoke_without_command=True)
-def _app_callback(
-    ctx: typer.Context,
-    reveal: bool = typer.Option(False, "--reveal", help="Reveals masked values."),
-):
-    if ctx.obj is None:
-        ctx.obj = {}
-    ctx.obj["reveal"] = reveal
-
-
-@app.command()
-def summary(
-    file_paths: List[Path] = typer.Argument(..., help="Paths to .env files"),
-):
-    """Show a diff summary for the provided files."""
-    file_paths = expand_paths(list(file_paths))
-    variable_map = compare(file_paths)
-    print_summary(variable_map)
-
-
-@app.command()
-def values(
-    file_paths: List[Path] = typer.Argument(..., help="Paths to .env files"),
-):
-    """Show value diffs as a matrix."""
-    file_paths = expand_paths(list(file_paths))
-    variable_map = compare(file_paths)
-    print_value_matrix(variable_map)
-
-
-@app.command()
-def presence(
-    file_paths: List[Path] = typer.Argument(..., help="Paths to .env files"),
-):
-    """Show presence diffs as a matrix."""
-    file_paths = expand_paths(list(file_paths))
-    variable_map = compare(file_paths)
-    print_presence_matrix(variable_map)
 
 
 def print_summary(map: dict):
@@ -149,44 +97,6 @@ def print_presence_matrix(map: dict):
         table.add_row(str(idx), *["✅" if v == v else "❌" for v in row])
 
     console.print(table)
-
-
-def compare(file_paths: list[Path]) -> defaultdict:
-    variable_map = defaultdict(dict)
-    for path in file_paths:
-        file_content = path.read_text()
-        file_lines = file_content.splitlines()
-
-        for line in file_lines:
-            if not line.strip() or "=" not in line:
-                continue
-
-            key, value = line.split("=", 1)
-            variable_map[key.strip()][str(path)] = value.strip()
-
-    if len(variable_map) == 0:
-        pprint("[yellow bold]No variables found in provided files.[/yellow bold]")
-        raise typer.Exit(code=1)
-
-    return variable_map
-
-
-def expand_paths(raw_paths: list[Path]) -> list[Path]:
-    expanded: list[Path] = []
-
-    for path in raw_paths:
-        if path.is_dir():
-            expanded.extend(path.glob(".env*"))
-            continue
-        if "*" in path.name:
-            expanded.extend(path.parent.glob(path.name))
-            continue
-        if path.exists():
-            expanded.append(path)
-        else:
-            pprint(f"[red bold]File not found:[/red bold] {path}")
-            raise typer.Exit(code=1)
-    return expanded
 
 
 def build_matrix(map: dict, center_values: bool = False) -> tuple[DataFrame, Table]:
