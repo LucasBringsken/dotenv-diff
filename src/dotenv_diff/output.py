@@ -69,7 +69,7 @@ def print_summary(map: dict):
 
         console.print(
             Panel(
-                Group(*diverging_details),
+                Group(*diverging_details[:-1]),
                 title="[yellow]Diverging Value Details[/yellow]",
                 title_align="left",
                 border_style="yellow",

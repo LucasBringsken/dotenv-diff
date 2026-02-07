@@ -6,7 +6,7 @@ import typer
 from typing import List
 
 app = typer.Typer(
-    help="Handy tool for quickly spotting missing keys and differing values in .env files",
+    help="Lightweight tool for quickly spotting missing keys and differing values in .env files",
     add_completion=False,
 )
 
