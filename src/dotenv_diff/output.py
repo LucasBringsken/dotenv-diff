@@ -3,12 +3,12 @@ from rich.panel import Panel
 from rich.rule import Rule
 from rich.table import Table
 from rich import box
-from .utils import build_matrix_data
+from .utils import build_matrix_data, mask_value
 
 console = Console()
 
 
-def print_summary(variable_map: dict):
+def print_summary(variable_map: dict, reveal: bool = False):
     files, rows = build_matrix_data(variable_map)
 
     num_files = len(files)
@@ -17,7 +17,7 @@ def print_summary(variable_map: dict):
     missing_count = sum(any(v is None for v in values) for _, values in rows)
 
     modified_count = sum(
-        len({v for v in values if v is not None}) > 1 for _, values in rows
+        len({v[0] for v in values if v is not None}) > 1 for _, values in rows
     )
 
     summary_content = Group(
@@ -70,7 +70,9 @@ def print_summary(variable_map: dict):
             diverging_details.append(f"• [bold yellow]{key}[/bold yellow]")
 
             for file, val in present.items():
-                diverging_details.append(f"  [dim]↳ {file}:[/dim] [cyan]{val}[/cyan]")
+                diverging_details.append(
+                    f"  [dim]↳ {file}:[/dim] [cyan]{mask_value(val, reveal)}[/cyan]"
+                )
 
             diverging_details.append("")
 
@@ -85,20 +87,27 @@ def print_summary(variable_map: dict):
         )
 
 
-def print_value_matrix(variable_map: dict):
+def print_value_matrix(variable_map: dict, reveal: bool = False):
     files, rows = build_matrix_data(variable_map)
     table = build_table(files)
 
     for key, row in rows:
         table.add_row(
             key,
-            *[str(v) if v is not None else "[red bold]—[/red bold]" for v in row],
+            *[
+                (
+                    str(mask_value(v, reveal))
+                    if v is not None
+                    else "[red bold]—[/red bold]"
+                )
+                for v in row
+            ],
         )
 
     console.print(table)
 
 
-def print_presence_matrix(variable_map: dict):
+def print_presence_matrix(variable_map: dict, reveal: bool = False):
     files, rows = build_matrix_data(variable_map)
     table = build_table(files, center_values=True)
 

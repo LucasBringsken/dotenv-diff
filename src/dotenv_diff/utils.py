@@ -31,3 +31,14 @@ def build_matrix_data(variable_map):
         matrix.append((key, row))
 
     return files, matrix
+
+
+def mask_value(cell: tuple[str, bool], reveal: bool) -> str:
+    value, quoted = cell
+    if value is None:
+        return None
+
+    if reveal or not quoted:
+        return value
+
+    return "*" * min(len(value), 8)
