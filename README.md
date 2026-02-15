@@ -1,5 +1,11 @@
 # [dotenv-diff](https://github.com/LucasBringsken/dotenv-diff)
 
+[![PyPI](https://img.shields.io/pypi/v/dotenv-diff)](https://pypi.org/project/dotenv-diff/)
+![Python](https://img.shields.io/pypi/pyversions/dotenv-diff)
+![License](https://img.shields.io/github/license/LucasBringsken/dotenv-diff)
+![Build](https://github.com/LucasBringsken/dotenv-diff/actions/workflows/release.yml/badge.svg)
+
+
 **Lightweight tool for quickly spotting missing keys and differing values in .env files**
 
 `dotenv-diff` helps compare multiple `.env` files and immediately see:
