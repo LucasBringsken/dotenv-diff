@@ -1,23 +1,24 @@
-from pandas import DataFrame
 from rich.console import Console, Group
 from rich.panel import Panel
 from rich.rule import Rule
 from rich.table import Table
 from rich import box
+from .utils import build_matrix_data
 
 console = Console()
 
 
-def print_summary(map: dict):
-    df = DataFrame.from_dict(map, orient="index")
-    num_files = len(df.columns)
-    num_vars = len(df.index)
+def print_summary(variable_map: dict):
+    files, rows = build_matrix_data(variable_map)
 
-    incomplete_mask = df.isna().any(axis=1)
-    diverging_mask = df.nunique(axis=1) > 1
+    num_files = len(files)
+    num_vars = len(rows)
 
-    missing_count = int(incomplete_mask.sum())
-    modified_count = int(diverging_mask.sum())
+    missing_count = sum(any(v is None for v in values) for _, values in rows)
+
+    modified_count = sum(
+        len({v for v in values if v is not None}) > 1 for _, values in rows
+    )
 
     summary_content = Group(
         "[bold cyan]SUMMARY[/bold cyan]",
@@ -35,8 +36,10 @@ def print_summary(map: dict):
 
     if missing_count > 0:
         incomplete_details = []
-        for key, row in df[incomplete_mask].iterrows():
-            missing_in = row.index[row.isna()].tolist()
+        for key, values in rows:
+            missing_in = [files[i] for i, v in enumerate(values) if v is None]
+            if not missing_in:
+                continue
 
             incomplete_details.append(f"• [bold red]{key}[/bold red] is missing in:")
 
@@ -57,12 +60,16 @@ def print_summary(map: dict):
 
     if modified_count > 0:
         diverging_details = []
-        for key, row in df[diverging_mask].iterrows():
-            values = row.dropna()
+
+        for key, values in rows:
+            present = {files[i]: v for i, v in enumerate(values) if v is not None}
+
+            if len(set(present.values())) <= 1:
+                continue
 
             diverging_details.append(f"• [bold yellow]{key}[/bold yellow]")
 
-            for file, val in values.items():
+            for file, val in present.items():
                 diverging_details.append(f"  [dim]↳ {file}:[/dim] [cyan]{val}[/cyan]")
 
             diverging_details.append("")
@@ -78,30 +85,33 @@ def print_summary(map: dict):
         )
 
 
-def print_value_matrix(map: dict):
-    df, table = build_matrix(map)
+def print_value_matrix(variable_map: dict):
+    files, rows = build_matrix_data(variable_map)
+    table = build_table(files)
 
-    for idx, row in df.iterrows():
+    for key, row in rows:
         table.add_row(
-            str(idx),
-            *[str(v) if v == v else "[red bold]—[/red bold]" for v in row],
+            key,
+            *[str(v) if v is not None else "[red bold]—[/red bold]" for v in row],
         )
 
     console.print(table)
 
 
-def print_presence_matrix(map: dict):
-    df, table = build_matrix(map, center_values=True)
+def print_presence_matrix(variable_map: dict):
+    files, rows = build_matrix_data(variable_map)
+    table = build_table(files, center_values=True)
 
-    for idx, row in df.iterrows():
-        table.add_row(str(idx), *["✅" if v == v else "❌" for v in row])
+    for key, row in rows:
+        table.add_row(
+            key,
+            *["✅" if v is not None else "❌" for v in row],
+        )
 
     console.print(table)
 
 
-def build_matrix(map: dict, center_values: bool = False) -> tuple[DataFrame, Table]:
-    df = DataFrame.from_dict(map, orient="index")
-
+def build_table(files: list[str], center_values: bool = False) -> Table:
     table = Table(
         show_header=True,
         header_style="bold magenta",
@@ -110,9 +120,11 @@ def build_matrix(map: dict, center_values: bool = False) -> tuple[DataFrame, Tab
     )
     table.add_column("VARIABLE", style="bold")
 
-    for col in df.columns:
+    for col in files:
         table.add_column(
-            col, style="cyan", justify="center" if center_values else "default"
+            col,
+            style="cyan",
+            justify="center" if center_values else "default",
         )
 
-    return (df, table)
+    return table
