@@ -14,11 +14,13 @@ app = typer.Typer(
 @app.callback(invoke_without_command=True)
 def _app_callback(
     ctx: typer.Context,
-    reveal: bool = typer.Option(False, "--reveal", help="Reveals masked values."),
 ):
     if ctx.obj is None:
         ctx.obj = {}
-    ctx.obj["reveal"] = reveal
+
+    if ctx.invoked_subcommand is None:
+        typer.echo(ctx.get_help())
+        raise typer.Exit(code=1)
 
 
 @app.command()

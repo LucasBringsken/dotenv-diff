@@ -41,7 +41,7 @@ You can pass:
 - Directories containing `.env*` files
 - Glob patterns like `.env.*`
 
-### Examples
+### Commands
 
 #### summary
 
