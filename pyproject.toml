@@ -1,6 +1,6 @@
 [project]
 name = "dotenv-diff"
-version = "0.1.1"
+version = "0.2.0"
 authors = [{ name = "Lucas Bringsken", email = "kontakt@lucasbringsken.de" }]
 description = "Lightweight tool for quickly spotting missing keys and differing values in .env files"
 readme = "README.md"
