@@ -46,6 +46,19 @@ You can pass:
 - Directories containing `.env*` files
 - Glob patterns like `.env.*`
 
+### Reveal Mode
+
+Environment variables are often quoted in `.env` files to protect sensitive
+values or to ensure correct parsing.
+
+When a value is wrapped in quotes, `dotenv-diff` treats it as **masked** and
+hides the actual content in output tables.
+
+Example:
+`SECRET_KEY="secret-value"` -> `SECRET_KEY ********`
+
+If you need to inspect the real values, you can reveal them using the `--reveal` flag after every command. This will display the actual contents instead of masked placeholders.
+
 ### Commands
 
 #### summary
@@ -53,7 +66,7 @@ You can pass:
 Show a high‑level overview of differences.
 
 ```bash
-dotenv-diff summary /path/to/.env.*
+dotenv-diff summary /path/to/.env.* [--reveal]
 ```
 
 ```
@@ -80,20 +93,20 @@ Diverging Value Details
 Show a matrix of actual values for each key and file.
 
 ```bash
-dotenv-diff values /path/to/.env.*
+dotenv-diff values /path/to/.env.* [--reveal]
 ```
 
 ```
-╭───────────────────────────────────────────────────────────────╮
-│ VARIABLE        │ .env.local │ .env.staging │ .env.production │
-├─────────────────┼────────────┼──────────────┼─────────────────┤
-│ APP_ENV         │ development│ staging      │ production      │
-│ DEBUG           │ true       │ true         │ false           │
-│ LOG_LEVEL       │ DEBUG      │ —            │ INFO            │
-│ DATABASE_USER   │ dev_user   │ prod_user    │ prod_user       │
-│ DATABASE_PASS   │ dev_pass   │ prod_pass    │ prod_pass       │
-│ PORT            │ 8000       │ 8000         │ —               │
-╰───────────────────────────────────────────────────────────────╯
+╭────────────────────────────────────────────────────────────────╮
+│ VARIABLE        │ .env.local  │ .env.staging │ .env.production │
+├─────────────────┼─────────────┼──────────────┼─────────────────┤
+│ APP_ENV         │ development │ staging      │ production      │
+│ DEBUG           │ true        │ true         │ false           │
+│ LOG_LEVEL       │ DEBUG       │ —            │ INFO            │
+│ DATABASE_USER   │ ********    │ ********     │ ********        │
+│ DATABASE_PASS   │ dev_pass    │ prod_pass    │ prod_pass       │
+│ PORT            │ 8000        │ 8000         │ —               │
+╰────────────────────────────────────────────────────────────────╯
 ```
 
 #### presence
